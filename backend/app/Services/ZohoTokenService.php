@@ -10,19 +10,15 @@
 	{
 		public function getAccessToken(): string
 		{
-			// cache token for 50 min so it doesnt expire (zoho gives 60 min)
 			return Cache::remember('zoho_access_token', 3000, function () {
 				return $this->refreshAccessToken();
 			});
 		}
-
-		// sometimes token expires early, so we need to clear cache and get new one
 		public function clearToken()
 		{
 			Cache::forget('zoho_access_token');
 			Log::info('Cleared zoho token cache');
 		}
-
 		private function refreshAccessToken(): string
 		{
 			$response = Http::asForm()->post(env('ZOHO_ACCOUNTS_URL') . '/oauth/v2/token', [
@@ -31,14 +27,12 @@
 				'client_secret' => env('ZOHO_CLIENT_SECRET'),
 				'grant_type' => 'refresh_token',
 			]);
-
 			$data = $response->json();
 			Log::info('Zoho token refresh response', $data ?? []);
 
 			if (!isset($data['access_token'])) {
 				throw new \Exception('Failed to refresh Zoho token: ' . json_encode($data));
 			}
-
 			return $data['access_token'];
 		}
 	}
